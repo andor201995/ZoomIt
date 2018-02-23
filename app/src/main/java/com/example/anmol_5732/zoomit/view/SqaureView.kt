@@ -13,14 +13,14 @@ import android.view.ViewGroup
 /**
  * Created by anmol-5732 on 05/01/18.
  */
-class CanvasView(context: Context) : View(context) {
+class SqaureView(context: Context) : View(context) {
     private var paint: Paint
     private var path: Path = Path()
     private var initX: Float = 0.0f
     private var initY: Float = 0.0f
 
     init {
-        this.setDrawingCacheEnabled(true);
+        setDrawingCacheEnabled(true);
         paint = Paint()
         paint.color = Color.argb(255, 100, 200, 0)
         paint.style = Paint.Style.FILL_AND_STROKE
@@ -46,8 +46,8 @@ class CanvasView(context: Context) : View(context) {
                 paint.color = Color.GREEN
             }
             MotionEvent.ACTION_MOVE -> {
-                translationX = translationX + (event.rawX - initX) / DemoView.scale
-                translationY = translationY + (event.rawY - initY) / DemoView.scale
+                translationX = translationX + (event.rawX - initX) / ZoomView.scale
+                translationY = translationY + (event.rawY - initY) / ZoomView.scale
             }
         }
         initX = event.rawX
