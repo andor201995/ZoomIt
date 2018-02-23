@@ -1,4 +1,4 @@
-package com.example.anmol_5732.mycanvas.view
+package com.example.anmol_5732.zoomit.view
 
 import android.content.Context
 import android.graphics.Canvas

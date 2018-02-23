@@ -1,4 +1,4 @@
-package com.example.anmol_5732.mycanvas.view
+package com.example.anmol_5732.zoomit.view
 
 import android.content.Context
 import android.graphics.*
@@ -47,12 +47,13 @@ class DemoView(context: Context) : RelativeLayout(context) {
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         ev.transform(getScaleMatrix())
-        mGestureDetector.onTouchEvent(ev)
-        mScaledetector.onTouchEvent(ev)
-        if (!mScaledetector.isInProgress) {
-            return super.dispatchTouchEvent(ev)
-        }
-        return false
+        return super.dispatchTouchEvent(ev)
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        mGestureDetector.onTouchEvent(event)
+        mScaledetector.onTouchEvent(event)
+        return true
     }
 
     private fun getScaleMatrix(): Matrix {

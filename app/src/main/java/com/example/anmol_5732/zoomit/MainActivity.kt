@@ -1,10 +1,10 @@
-package com.example.anmol_5732.mycanvas
+package com.example.anmol_5732.zoomit
 
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.example.anmol_5732.mycanvas.view.CanvasView
-import com.example.anmol_5732.mycanvas.view.DemoView
+import com.example.anmol_5732.zoomit.view.CanvasView
+import com.example.anmol_5732.zoomit.view.DemoView
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {

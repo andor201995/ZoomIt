@@ -1,4 +1,4 @@
-package com.example.anmol_5732.mycanvas.bean
+package com.example.anmol_5732.zoomit.bean
 
 import android.graphics.Path
 

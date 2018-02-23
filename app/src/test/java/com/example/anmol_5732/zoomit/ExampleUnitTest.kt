@@ -1,4 +1,4 @@
-package com.example.anmol_5732.mycanvas
+package com.example.anmol_5732.zoomit
 
 import org.junit.Test
 
