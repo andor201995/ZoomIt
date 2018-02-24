@@ -1,8 +1,10 @@
 package com.example.anmol_5732.zoomit.view
 
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Matrix
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -15,22 +17,38 @@ import android.widget.RelativeLayout
 
 class ZoomView(context: Context) : RelativeLayout(context) {
 
+    private enum class Mode {
+        NONE,
+        DRAG,
+        ZOOM
+    }
 
     companion object {
         var scale = 1f
         var focusX: Float = 0.0f;
         var focusY: Float = 0.0f;
+        var translateX: Float = 0.0f
+        var translateY: Float = 0.0f
     }
 
-    private var mGestureDetector: GestureDetector
     private val MIN_ZOOM = 1f
     private val MAX_ZOOM = 5f
+    private var initX: Float = 0.0f
+    private var initY: Float = 0.0f
+    private var previousTranslateX: Float = 0f;
+
+
+    private var previousTranslateY: Float = 0f;
+
+    private lateinit var mode: Mode
+
     private var mScaledetector: ScaleGestureDetector
 
+    private var mGestureDetector: GestureDetector
+
     init {
-        isDrawingCacheEnabled = true;
         setBackgroundColor(Color.CYAN)
-        layoutParams = RelativeLayout.LayoutParams(2000, 2000)
+        layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
         mGestureDetector = GestureDetector(context, GestureListner())
         mScaledetector = ScaleGestureDetector(context, ScaleListner())
     }
@@ -39,10 +57,39 @@ class ZoomView(context: Context) : RelativeLayout(context) {
         return super.dispatchTouchEvent(ev)
     }
 
+
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        when (event!!.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                mode = Mode.DRAG
+                initX = event.getX() - previousTranslateX;
+                initY = event.getY() - previousTranslateY;
+            }
+            MotionEvent.ACTION_MOVE -> {
+                translateX = event.getX() - initX;
+                translateY = event.getY() - initY;
+
+            }
+            MotionEvent.ACTION_POINTER_DOWN -> mode = Mode.ZOOM
+            MotionEvent.ACTION_POINTER_UP -> {
+                previousTranslateX = translateX;
+                previousTranslateY = translateY;
+                mode = Mode.DRAG
+            }
+            MotionEvent.ACTION_UP -> {
+                previousTranslateX = translateX;
+                previousTranslateY = translateY;
+                mode = Mode.NONE
+            }
+
+        }
         mGestureDetector.onTouchEvent(event)
         mScaledetector.onTouchEvent(event)
-        getChildAt(0).invalidate()
+
+        if ((mode == Mode.DRAG && scale != MIN_ZOOM) || mode == Mode.ZOOM) {
+            getChildAt(0).invalidate();
+        }
+
         return true
     }
 
@@ -51,11 +98,16 @@ class ZoomView(context: Context) : RelativeLayout(context) {
         return this.drawingCache
     }
 
-
     inner class ScaleListner : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean {
-            focusX = detector!!.focusX
-            focusY = detector.focusY
+            val scaleMatrix = Matrix()
+            val invertScaleMatrix = Matrix()
+            scaleMatrix.setScale(scale, scale, focusX, focusY)
+            scaleMatrix.invert(invertScaleMatrix)
+            val focusPoints: FloatArray = floatArrayOf(detector!!.focusX, detector.focusY)
+            invertScaleMatrix.mapPoints(focusPoints)
+            focusX = focusPoints.get(0)
+            focusY = focusPoints.get(1)
             return true
         }
 
@@ -67,6 +119,7 @@ class ZoomView(context: Context) : RelativeLayout(context) {
         }
 
         override fun onScaleEnd(detector: ScaleGestureDetector?) {
+            super.onScaleEnd(detector)
         }
     }
 
