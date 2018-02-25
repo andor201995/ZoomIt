@@ -31,6 +31,7 @@ class ScaleContainer(context: Context) : FrameLayout(context) {
 
     override fun dispatchDraw(canvas: Canvas) {
         canvas.scale(ZoomView.scale, ZoomView.scale, ZoomView.focusX, ZoomView.focusY)
+//        canvas.translate(ZoomView.translateX, ZoomView.translateY)
         canvas.drawCircle(200f, 200f, 100f, paint)
         super.dispatchDraw(canvas)
     }
@@ -39,6 +40,7 @@ class ScaleContainer(context: Context) : FrameLayout(context) {
         val matrix = Matrix()
         val invertMatrix = Matrix()
         matrix.postScale(ZoomView.scale, ZoomView.scale, ZoomView.focusX, ZoomView.focusY)
+//        matrix.setTranslate(ZoomView.translateX, ZoomView.translateY)
         matrix.invert(matrix)
         return matrix
     }

@@ -14,10 +14,16 @@ import android.view.ViewGroup
  * Created by anmol-5732 on 05/01/18.
  */
 class SqaureView(context: Context) : View(context) {
+    companion object {
+        private val INVALID_POINTER_ID: Int = -1
+    }
+
+    private var activePointerID: Int = INVALID_POINTER_ID
     private var paint: Paint
     private var path: Path = Path()
     private var initX: Float = 0.0f
     private var initY: Float = 0.0f
+
 
     init {
         setDrawingCacheEnabled(true);
@@ -38,20 +44,35 @@ class SqaureView(context: Context) : View(context) {
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        when (event!!.action) {
+        when ((event!!.action and MotionEvent.ACTION_MASK)) {
             MotionEvent.ACTION_DOWN -> {
                 paint.color = Color.WHITE
+                initX = event.getX()
+                initY = event.getY()
+                activePointerID = event.getPointerId(0)
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val pointerIndex: Int = event.findPointerIndex(activePointerID)
+                translationX = translationX + (event.getX(pointerIndex) - initX) / ZoomView.scale
+                translationY = translationY + (event.getY(pointerIndex) - initY) / ZoomView.scale
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+                val pointerIndex: Int = (event.action and MotionEvent.ACTION_POINTER_INDEX_MASK) shr MotionEvent.ACTION_POINTER_INDEX_SHIFT
+                val pointerId: Int = event.getPointerId(pointerIndex)
+                if (pointerId == activePointerID) {
+                    val newPointerIndex = if (pointerIndex == 0) 1 else 0
+                    initX = event.getX(newPointerIndex)
+                    initY = event.getY(newPointerIndex)
+                    activePointerID = event.getPointerId(newPointerIndex)
+                }
             }
             MotionEvent.ACTION_UP -> {
                 paint.color = Color.GREEN
+                activePointerID = INVALID_POINTER_ID
             }
-            MotionEvent.ACTION_MOVE -> {
-                translationX = translationX + (event.rawX - initX) / ZoomView.scale
-                translationY = translationY + (event.rawY - initY) / ZoomView.scale
-            }
+            MotionEvent.ACTION_CANCEL -> activePointerID = INVALID_POINTER_ID
+
         }
-        initX = event.rawX
-        initY = event.rawY
         invalidate()
         return true
     }
