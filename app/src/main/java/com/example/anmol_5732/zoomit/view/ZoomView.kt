@@ -1,13 +1,15 @@
 package com.example.anmol_5732.zoomit.view
 
 
+import android.content.ContentValues.TAG
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Matrix
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
+import android.view.View
 import android.widget.RelativeLayout
 
 
@@ -16,19 +18,29 @@ import android.widget.RelativeLayout
  */
 
 class ZoomView(context: Context) : RelativeLayout(context) {
-
-    companion object {
-        var scale = 1f
-        var focusX: Float = 0.0f;
-        var focusY: Float = 0.0f;
-        var translateX: Float = 0.0f
-        var translateY: Float = 0.0f
+    private enum class Mode {
+        NONE,
+        DRAG,
+        ZOOM
     }
 
-    private val MIN_ZOOM = 1.0f
+    private var scaleFactor = 1f
+    private var lastScaleFactor: Float = 0f
+    private var focusX: Float = 0.0f
+    private var focusY: Float = 0.0f
+
+    private val MIN_ZOOM = 1f
     private val MAX_ZOOM = 5f
+
+    private var translateX: Float = 0.0f
+    private var translateY: Float = 0.0f
+
+    private var mode = Mode.NONE
+
     private var initX: Float = 0.0f
     private var initY: Float = 0.0f
+    private var prevDx = 0f
+    private var prevDy = 0f
 
     private var mScaledetector: ScaleGestureDetector
 
@@ -41,54 +53,106 @@ class ZoomView(context: Context) : RelativeLayout(context) {
         mScaledetector = ScaleGestureDetector(context, ScaleListner())
     }
 
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        mGestureDetector.onTouchEvent(event)
-        mScaledetector.onTouchEvent(event)
-
-        when (event!!.actionMasked) {
+    override fun onTouchEvent(motionEvent: MotionEvent?): Boolean {
+        when (motionEvent!!.getAction() and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
-                initX = event.getX()
-                initY = event.getY()
-            }
-            MotionEvent.ACTION_MOVE -> {
-                if (!mScaledetector.isInProgress) {
-                    var distanceX = event.getX() - initX;
-                    var distanceY = event.getY() - initY;
-                    translateX += distanceX
-                    translateY += distanceY
+                Log.i(TAG, "DOWN")
+                if (scaleFactor > MIN_ZOOM) {
+                    mode = Mode.DRAG
+                    initX = motionEvent.getX() - prevDx
+                    initY = motionEvent.getY() - prevDy
                 }
-                initX = event.getX()
-                initY = event.getY()
-                getChildAt(0).invalidate();
             }
-
+            MotionEvent.ACTION_MOVE -> if (mode == Mode.DRAG) {
+                translateX = motionEvent.getX() - initX
+                translateY = motionEvent.getY() - initY
+            }
+            MotionEvent.ACTION_POINTER_DOWN -> mode = Mode.ZOOM
+            MotionEvent.ACTION_POINTER_UP -> mode = Mode.NONE // changed from DRAG, was messing up zoom
+            MotionEvent.ACTION_UP -> {
+                Log.i(TAG, "UP")
+                mode = Mode.NONE
+                prevDx = translateX
+                prevDy = translateY
+            }
         }
+
+        mGestureDetector.onTouchEvent(motionEvent)
+        mScaledetector.onTouchEvent(motionEvent)
+
+        if (mode == Mode.DRAG && scaleFactor >= MIN_ZOOM || mode == Mode.ZOOM) {
+            parent.requestDisallowInterceptTouchEvent(true)
+            val maxDx = child().width * (scaleFactor - 1)  // adjusted for zero pivot
+            val maxDy = child().height * (scaleFactor - 1)  // adjusted for zero pivot
+            translateX = Math.min(Math.max(translateX, -maxDx), 0f)  // adjusted for zero pivot
+            translateY = Math.min(Math.max(translateY, -maxDy), 0f)  // adjusted for zero pivot
+            Log.i(TAG, "Width: " + child().width + ", scaleFactor " + scaleFactor + ", translateX " + translateX
+                    + ", max " + maxDx)
+            applyScaleAndTranslation()
+        }
+
         return true
     }
 
 
-    fun get(): Bitmap {
-        return this.drawingCache
+//    fun get(): Bitmap {
+//        return this.drawingCache
+//    }
+
+    private fun applyScaleAndTranslation() {
+        child().setScaleX(scaleFactor)
+        child().setScaleY(scaleFactor)
+        child().setPivotX(0f)  // default is to pivot at view center
+        child().setPivotY(0f)  // default is to pivot at view center
+        child().setTranslationX(translateX)
+        child().setTranslationY(translateY)
+    }
+
+    private fun child(): View {
+        return getChildAt(0)
     }
 
     inner class ScaleListner : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean {
             val scaleMatrix = Matrix()
             val invertScaleMatrix = Matrix()
-            scaleMatrix.setScale(scale, scale, focusX, focusY)
+            scaleMatrix.setScale(scaleFactor, scaleFactor, focusX, focusY)
             scaleMatrix.invert(invertScaleMatrix)
             val focusPoints: FloatArray = floatArrayOf(detector!!.focusX, detector.focusY)
             invertScaleMatrix.mapPoints(focusPoints)
-            focusX = focusPoints.get(0)
-            focusY = focusPoints.get(1)
+            focusX = focusPoints[0]
+            focusY = focusPoints[1]
             return true
         }
 
-        override fun onScale(detector: ScaleGestureDetector?): Boolean {
-            scale *= detector!!.scaleFactor
-            scale = Math.max(MIN_ZOOM, Math.min(scale, MAX_ZOOM))
-            getChildAt(0).invalidate();
+        override fun onScale(scaleDetector: ScaleGestureDetector?): Boolean {
+            val scaleFactor = scaleDetector!!.getScaleFactor()
+            Log.i(TAG, "onScale(), scaleFactor = " + scaleFactor)
+            if (lastScaleFactor == 0f || Math.signum(scaleFactor) == Math.signum(lastScaleFactor)) {
+                val prevScale = this@ZoomView.scaleFactor
+                this@ZoomView.scaleFactor *= scaleFactor
+                this@ZoomView.scaleFactor = Math.max(MIN_ZOOM, Math.min(this@ZoomView.scaleFactor, MAX_ZOOM))
+                lastScaleFactor = scaleFactor
+                val adjustedScaleFactor = this@ZoomView.scaleFactor / prevScale
+                // added logic to adjust translateX and translateY for pinch/zoom pivot point
+                Log.d(TAG, "onScale, adjustedScaleFactor = " + adjustedScaleFactor)
+                Log.d(TAG, "onScale, BEFORE translateX/translateY = $translateX/$translateY")
+                val focusX = scaleDetector.getFocusX()
+                val focusY = scaleDetector.getFocusY()
+                Log.d(TAG, "onScale, focusX/focusy = $focusX/$focusY")
+                translateX += (translateX - focusX) * (adjustedScaleFactor - 1)
+                translateY += (translateY - focusY) * (adjustedScaleFactor - 1)
+                Log.d(TAG, "onScale, translateX/translateY = $translateX/$translateY")
+            } else {
+                lastScaleFactor = 0f
+            }
+
             return true
+
+//            scaleFactor *= detector!!.scaleFactor
+//            scaleFactor = Math.max(MIN_ZOOM, Math.min(scaleFactor, MAX_ZOOM))
+//            getChildAt(0).invalidate()
+//            return true
 
         }
 

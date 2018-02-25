@@ -53,8 +53,8 @@ class SqaureView(context: Context) : View(context) {
             }
             MotionEvent.ACTION_MOVE -> {
                 val pointerIndex: Int = event.findPointerIndex(activePointerID)
-                translationX = translationX + (event.getX(pointerIndex) - initX) / ZoomView.scale
-                translationY = translationY + (event.getY(pointerIndex) - initY) / ZoomView.scale
+                translationX = translationX + (event.getX(pointerIndex) - initX)
+                translationY = translationY + (event.getY(pointerIndex) - initY)
             }
             MotionEvent.ACTION_POINTER_UP -> {
                 val pointerIndex: Int = (event.action and MotionEvent.ACTION_POINTER_INDEX_MASK) shr MotionEvent.ACTION_POINTER_INDEX_SHIFT

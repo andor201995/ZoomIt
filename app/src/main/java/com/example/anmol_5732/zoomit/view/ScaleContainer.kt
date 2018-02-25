@@ -15,7 +15,7 @@ class ScaleContainer(context: Context) : FrameLayout(context) {
     private var paint: Paint
 
     init {
-        setDrawingCacheEnabled(true);
+        setDrawingCacheEnabled(true)
         paint = Paint()
         paint.color = Color.BLACK
         paint.style = Paint.Style.FILL
@@ -30,17 +30,17 @@ class ScaleContainer(context: Context) : FrameLayout(context) {
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        canvas.scale(ZoomView.scale, ZoomView.scale, ZoomView.focusX, ZoomView.focusY)
-//        canvas.translate(ZoomView.translateX, ZoomView.translateY)
+//        canvas.scale(ZoomView.scale, ZoomView.scale, ZoomView.focusX, ZoomView.focusY)
+//        canvas.translate(ZoomView.dx, ZoomView.dy)
         canvas.drawCircle(200f, 200f, 100f, paint)
         super.dispatchDraw(canvas)
     }
 
     private fun getScaleMatrix(): Matrix {
         val matrix = Matrix()
-        val invertMatrix = Matrix()
-        matrix.postScale(ZoomView.scale, ZoomView.scale, ZoomView.focusX, ZoomView.focusY)
-//        matrix.setTranslate(ZoomView.translateX, ZoomView.translateY)
+//        val invertMatrix = Matrix()
+//        matrix.postScale(ZoomView.scale, ZoomView.scale, ZoomView.focusX, ZoomView.focusY)
+//        matrix.setTranslate(ZoomView.dx, ZoomView.dy)
         matrix.invert(matrix)
         return matrix
     }
