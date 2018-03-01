@@ -6,14 +6,14 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 
 
 /**
  * Created by anmol-5732 on 05/01/18.
  */
-class SqaureView(context: Context) : View(context) {
+class SqaureView(context: Context) : FrameLayout(context) {
     companion object {
         private val INVALID_POINTER_ID: Int = -1
     }
@@ -76,5 +76,4 @@ class SqaureView(context: Context) : View(context) {
         invalidate()
         return true
     }
-
 }
