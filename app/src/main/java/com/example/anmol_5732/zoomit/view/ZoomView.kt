@@ -25,8 +25,6 @@ class ZoomView(context: Context) : RelativeLayout(context) {
 
     private var scaleFactor = 1f
     private var lastScaleFactor: Float = 0f
-    private var focusX: Float = 0.0f
-    private var focusY: Float = 0.0f
 
     private val MIN_ZOOM = 0.5f
     private val MAX_ZOOM = 5f
@@ -54,6 +52,16 @@ class ZoomView(context: Context) : RelativeLayout(context) {
         clipToPadding = false
     }
 
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        mGestureDetector.onTouchEvent(ev)
+        mScaledetector.onTouchEvent(ev)
+        if (mScaledetector.isInProgress) {
+            applyScaleAndTranslation()
+            return false
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
     override fun onTouchEvent(motionEvent: MotionEvent?): Boolean {
         when (motionEvent!!.getAction() and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
@@ -74,9 +82,6 @@ class ZoomView(context: Context) : RelativeLayout(context) {
                 prevDy = translateY
             }
         }
-
-        mGestureDetector.onTouchEvent(motionEvent)
-        mScaledetector.onTouchEvent(motionEvent)
 
         if (mode == Mode.DRAG && scaleFactor >= MIN_ZOOM || mode == Mode.ZOOM) {
             parent.requestDisallowInterceptTouchEvent(true)
@@ -116,23 +121,26 @@ class ZoomView(context: Context) : RelativeLayout(context) {
         return getChildAt(0)
     }
 
+    private fun setScaleAndTranslation(scaleFactor: Float, focusX: Float, focusY: Float) {
+        if (lastScaleFactor == 0f || Math.signum(scaleFactor) == Math.signum(lastScaleFactor)) {
+            val prevScale = this@ZoomView.scaleFactor
+            this@ZoomView.scaleFactor *= scaleFactor
+            this@ZoomView.scaleFactor = Math.max(MIN_ZOOM, Math.min(this@ZoomView.scaleFactor, MAX_ZOOM))
+            lastScaleFactor = scaleFactor
+            val adjustedScaleFactor = this@ZoomView.scaleFactor / prevScale
+            // added logic to adjust translateX and translateY for pinch/zoom pivot point
+            translateX += (translateX - focusX) * (adjustedScaleFactor - 1)
+            translateY += (translateY - focusY) * (adjustedScaleFactor - 1)
+        } else {
+            lastScaleFactor = 0f
+        }
+    }
+
     inner class ScaleListner : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+
         override fun onScale(scaleDetector: ScaleGestureDetector?): Boolean {
             val scaleFactor = scaleDetector!!.getScaleFactor()
-            if (lastScaleFactor == 0f || Math.signum(scaleFactor) == Math.signum(lastScaleFactor)) {
-                val prevScale = this@ZoomView.scaleFactor
-                this@ZoomView.scaleFactor *= scaleFactor
-                this@ZoomView.scaleFactor = Math.max(MIN_ZOOM, Math.min(this@ZoomView.scaleFactor, MAX_ZOOM))
-                lastScaleFactor = scaleFactor
-                val adjustedScaleFactor = this@ZoomView.scaleFactor / prevScale
-                // added logic to adjust translateX and translateY for pinch/zoom pivot point
-                val focusX = scaleDetector.getFocusX()
-                val focusY = scaleDetector.getFocusY()
-                translateX += (translateX - focusX) * (adjustedScaleFactor - 1)
-                translateY += (translateY - focusY) * (adjustedScaleFactor - 1)
-            } else {
-                lastScaleFactor = 0f
-            }
+            setScaleAndTranslation(scaleFactor, scaleDetector.focusX, scaleDetector.focusY)
             return true
         }
 
@@ -141,6 +149,25 @@ class ZoomView(context: Context) : RelativeLayout(context) {
     inner class GestureListner : GestureDetector.SimpleOnGestureListener() {
         override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
             return super.onScroll(e1, e2, distanceX, distanceY)
+        }
+
+        override fun onDoubleTap(e: MotionEvent?): Boolean {
+            scaleFactor = 1f
+            child().setScaleX(scaleFactor)
+            child().setScaleY(scaleFactor)
+            child().setPivotX(0f)  // default is to pivot at view center
+            child().setPivotY(0f)  // default is to pivot at view center
+            child().setTranslationX(-translateX)
+            child().setTranslationY(-translateY)
+            translateX = 0f
+            translateY = 0f
+            lastScaleFactor = 0f
+            initX = 0f
+            initY = 0f
+            prevDx = 0f
+            prevDy = 0f
+
+            return super.onDoubleTap(e)
         }
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
