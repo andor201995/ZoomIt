@@ -32,10 +32,10 @@ class SqaureView(context: Context) : FrameLayout(context) {
         paint.style = Paint.Style.FILL_AND_STROKE
         paint.isAntiAlias = true
         paint.isDither = true
-        path.addRect(0f, 0f, 200f, 200f, Path.Direction.CW)
+        path.addRect(0f, 0f, 600f, 600f, Path.Direction.CW)
         setLayerType(LAYER_TYPE_SOFTWARE, paint)
         setBackgroundColor(Color.YELLOW)
-        layoutParams = ViewGroup.LayoutParams(200, 200)
+        layoutParams = ViewGroup.LayoutParams(400, 400)
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -68,6 +68,7 @@ class SqaureView(context: Context) : FrameLayout(context) {
             }
             MotionEvent.ACTION_UP -> {
                 paint.color = Color.GREEN
+
                 activePointerID = INVALID_POINTER_ID
             }
             MotionEvent.ACTION_CANCEL -> activePointerID = INVALID_POINTER_ID
