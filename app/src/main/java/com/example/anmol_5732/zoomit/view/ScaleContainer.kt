@@ -1,8 +1,11 @@
 package com.example.anmol_5732.zoomit.view
 
 import android.content.Context
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
+import android.view.MotionEvent
 import android.widget.FrameLayout
 
 /**
@@ -10,34 +13,40 @@ import android.widget.FrameLayout
  */
 class ScaleContainer(context: Context) : FrameLayout(context) {
     private var paint: Paint
+    private var rectFrame = Rect(0, 0, 0, 0)
+    private var color = Color.YELLOW
 
     init {
         paint = Paint()
         paint.color = Color.BLACK
-        paint.style = Paint.Style.FILL
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 10f
         paint.isAntiAlias = true
         paint.isDither = true
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         clipChildren = false
         clipToPadding = false
+        post({
+            rectFrame.left = 0
+            rectFrame.top = 0
+            rectFrame.right = width
+            rectFrame.bottom = height
+            invalidate()
+
+        })
     }
 
-//    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+    //    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
 //        ev.transform(getScaleMatrix())
 //        return super.dispatchTouchEvent(ev)
 //    }
 //
-//    override fun dispatchDraw(canvas: Canvas) {
+    override fun dispatchDraw(canvas: Canvas) {
 //        canvas.scale(ZoomView.scaleFactor, ZoomView.scaleFactor)
 //        canvas.translate(ZoomView.translateX, ZoomView.translateY)
-//        canvas.drawCircle(0f, 0f, 100f, paint)
-//        canvas.drawCircle(0f, height.toFloat(), 100f, paint)
-//        canvas.drawCircle(width.toFloat(), 0f, 100f, paint)
-//        canvas.drawCircle(width.toFloat(), height.toFloat(), 100f, paint)
-//        paint.textSize = 50f
-//        canvas.drawText("hello their", 0, 11, 100f, 100f, paint)
-//        super.dispatchDraw(canvas)
-//    }
+        canvas.drawRect(rectFrame, paint)
+        super.dispatchDraw(canvas)
+    }
 //
 //    private fun getScaleMatrix(): Matrix {
 //        val matrix = Matrix()
@@ -47,4 +56,16 @@ class ScaleContainer(context: Context) : FrameLayout(context) {
 //        matrix.invert(matrix)
 //        return matrix
 //    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (color != Color.YELLOW) {
+            color = Color.YELLOW
+            setBackgroundColor(Color.YELLOW)
+        } else {
+            color = Color.BLACK
+            setBackgroundColor(Color.BLACK)
+        }
+
+        return super.onTouchEvent(event)
+    }
 }

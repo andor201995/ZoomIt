@@ -4,11 +4,9 @@ package com.example.anmol_5732.zoomit.view
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Rect
 import android.util.Log
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.ScaleGestureDetector
-import android.view.View
+import android.view.*
 import android.widget.RelativeLayout
 
 
@@ -114,11 +112,24 @@ class ZoomView(context: Context) : RelativeLayout(context) {
         child().setPivotY(0f)  // default is to pivot at view center
         child().setTranslationX(translateX)
         child().setTranslationY(translateY)
+        expandTouchArea(this, child(), 1000)
 //        child().invalidate()
     }
 
-    private fun child(): View {
-        return getChildAt(0)
+    fun expandTouchArea(bigView: View, smallView: View, extraPadding: Int) {
+        bigView.post(Runnable {
+            val rect = Rect()
+            smallView.getHitRect(rect)
+            rect.top -= extraPadding
+            rect.left -= extraPadding
+            rect.right += extraPadding
+            rect.bottom += extraPadding
+            bigView.setTouchDelegate(TouchDelegate(rect, smallView))
+        })
+    }
+
+    private fun child(): ViewGroup {
+        return getChildAt(0) as ViewGroup
     }
 
     private fun setScaleAndTranslation(scaleFactor: Float, focusX: Float, focusY: Float) {
@@ -153,12 +164,6 @@ class ZoomView(context: Context) : RelativeLayout(context) {
 
         override fun onDoubleTap(e: MotionEvent?): Boolean {
             scaleFactor = 1f
-            child().setScaleX(scaleFactor)
-            child().setScaleY(scaleFactor)
-            child().setPivotX(0f)  // default is to pivot at view center
-            child().setPivotY(0f)  // default is to pivot at view center
-            child().setTranslationX(-translateX)
-            child().setTranslationY(-translateY)
             translateX = 0f
             translateY = 0f
             lastScaleFactor = 0f
@@ -166,7 +171,7 @@ class ZoomView(context: Context) : RelativeLayout(context) {
             initY = 0f
             prevDx = 0f
             prevDy = 0f
-
+            applyScaleAndTranslation()
             return super.onDoubleTap(e)
         }
 
