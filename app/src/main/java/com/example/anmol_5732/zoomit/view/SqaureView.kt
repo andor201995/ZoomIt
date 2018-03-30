@@ -33,7 +33,6 @@ class SqaureView(context: Context) : FrameLayout(context) {
         paint.isAntiAlias = true
         paint.isDither = true
         path.addRect(0f, 0f, 400f, 400f, Path.Direction.CW)
-        setLayerType(LAYER_TYPE_SOFTWARE, paint)
         setBackgroundColor(Color.YELLOW)
         layoutParams = ViewGroup.LayoutParams(400, 400)
     }
@@ -73,7 +72,6 @@ class SqaureView(context: Context) : FrameLayout(context) {
             MotionEvent.ACTION_CANCEL -> activePointerID = INVALID_POINTER_ID
 
         }
-        invalidate()
         return true
     }
 }
