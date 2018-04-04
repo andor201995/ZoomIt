@@ -4,11 +4,11 @@ package com.example.anmol_5732.zoomit.view
 import android.content.Context
 import android.graphics.Color
 import android.graphics.PointF
+import android.graphics.RectF
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.widget.FrameLayout
-import kotlin.math.sign
 
 
 /**
@@ -69,71 +69,129 @@ class ZoomView(context: Context) : FrameLayout(context) {
 
     }
 
-    private fun setLayoutParamOfChild() {
-        val scaleContainer = child()
-        if (translateX.sign > 0) {
-            scaleContainer.layoutParams.width = ((childWidth / scaleFactor)).toInt()
-            scaleContainer.translationX -= translateX
-            for (i in 0..scaleContainer.childCount - 1) {
-                scaleContainer.getChildAt(i).translationX += translateX / scaleFactor
-            }
-            childLeftTop.offset(translateX / scaleFactor, 0f)
-            translateX = scaleContainer.translationX
-        } else {
-            if (childLeftTop.x > 0) {
-                if (childLeftTop.x - Math.abs(translateX) >= 0) {
-                    scaleContainer.translationX += Math.abs(translateX)
-                    for (i in 0..scaleContainer.childCount - 1) {
-                        scaleContainer.getChildAt(i).translationX -= Math.abs(translateX / scaleFactor)
-                    }
-                    childLeftTop.offset(translateX / scaleFactor, 0f)
-                    translateX = scaleContainer.translationX
-                } else {
-                    scaleContainer.translationX += Math.abs(childLeftTop.x)
-                    for (i in 0..scaleContainer.childCount - 1) {
-                        scaleContainer.getChildAt(i).translationX -= Math.abs(childLeftTop.x / scaleFactor)
-                    }
-                    childLeftTop.offset(-childLeftTop.x / scaleFactor, 0f)
-                    translateX = scaleContainer.translationX
-                    scaleContainer.layoutParams.width = ((childWidth + Math.abs(translateX)) / scaleFactor).toInt()
-                }
-            } else {
-                scaleContainer.layoutParams.width = ((childWidth + Math.abs(translateX)) / scaleFactor).toInt()
-            }
-        }
+    //TODO: this method is to setLayoutParam dynamically based on the area that is visible onScreen
+    /* private fun setLayoutParamOfChild() {
+         val scaleContainer = child()
+         if (translateX.sign > 0) {
+             scaleContainer.layoutParams.width = ((childWidth / scaleFactor)).toInt()
+             scaleContainer.translationX -= translateX
+             for (i in 0..scaleContainer.childCount - 1) {
+                 scaleContainer.getChildAt(i).translationX += translateX / scaleFactor
+             }
+             childLeftTop.offset(translateX / scaleFactor, 0f)
+             translateX = scaleContainer.translationX
+         } else {
+             if (childLeftTop.x > 0) {
+                 if (childLeftTop.x - Math.abs(translateX) >= 0) {
+                     scaleContainer.translationX += Math.abs(translateX)
+                     for (i in 0..scaleContainer.childCount - 1) {
+                         scaleContainer.getChildAt(i).translationX -= Math.abs(translateX / scaleFactor)
+                     }
+                     childLeftTop.offset(translateX / scaleFactor, 0f)
+                     translateX = scaleContainer.translationX
+                 } else {
+                     scaleContainer.translationX += Math.abs(childLeftTop.x)
+                     for (i in 0..scaleContainer.childCount - 1) {
+                         scaleContainer.getChildAt(i).translationX -= Math.abs(childLeftTop.x / scaleFactor)
+                     }
+                     childLeftTop.offset(-childLeftTop.x / scaleFactor, 0f)
+                     translateX = scaleContainer.translationX
+                     scaleContainer.layoutParams.width = ((childWidth + Math.abs(translateX)) / scaleFactor).toInt()
+                 }
+             } else {
+                 scaleContainer.layoutParams.width = ((childWidth + Math.abs(translateX)) / scaleFactor).toInt()
+             }
+         }
 
-        if (translateY.sign > 0) {
-            scaleContainer.layoutParams.height = ((childHeight / scaleFactor)).toInt()
-            scaleContainer.translationY -= translateY
-            for (i in 0..scaleContainer.childCount - 1) {
-                scaleContainer.getChildAt(i).translationY += translateY / scaleFactor
+         if (translateY.sign > 0) {
+             scaleContainer.layoutParams.height = ((childHeight / scaleFactor)).toInt()
+             scaleContainer.translationY -= translateY
+             for (i in 0..scaleContainer.childCount - 1) {
+                 scaleContainer.getChildAt(i).translationY += translateY / scaleFactor
+             }
+             childLeftTop.offset(0f, translateY / scaleFactor)
+             translateY = scaleContainer.translationY
+         } else {
+             if (childLeftTop.y > 0) {
+                 if (childLeftTop.y - Math.abs(translateY) >= 0) {
+                     scaleContainer.translationY += Math.abs(translateY)
+                     for (i in 0..scaleContainer.childCount - 1) {
+                         scaleContainer.getChildAt(i).translationY -= Math.abs(translateY / scaleFactor)
+                     }
+                     childLeftTop.offset(0f, translateY / scaleFactor)
+                     translateY = scaleContainer.translationY
+                 } else {
+                     scaleContainer.translationY += Math.abs(childLeftTop.y)
+                     for (i in 0..scaleContainer.childCount - 1) {
+                         scaleContainer.getChildAt(i).translationY -= Math.abs(childLeftTop.y / scaleFactor)
+                     }
+                     childLeftTop.offset(0f, -childLeftTop.y / scaleFactor)
+                     translateY = scaleContainer.translationY
+                     scaleContainer.layoutParams.height = ((childHeight + Math.abs(translateY)) / scaleFactor).toInt()
+                 }
+             } else {
+                 scaleContainer.layoutParams.height = ((childHeight + Math.abs(translateY)) / scaleFactor).toInt()
+             }
+         }
+         scaleContainer.rectFrame.offsetTo(childLeftTop.x, childLeftTop.y)
+         scaleContainer.requestLayout()
+     }
+ */
+
+    private fun setLayoutParamOfChild() {
+        val container = child()
+        val rectF = RectF(childLeftTop.x, childLeftTop.y, childWidth.toFloat(), childHeight.toFloat())
+
+        for (containerChildIndex in 0 until container.childCount) {
+            val baseShapeView = container.getChildAt(containerChildIndex)
+            if (baseShapeView.translationX < rectF.left) {
+                rectF.left = baseShapeView.translationX
             }
-            childLeftTop.offset(0f, translateY / scaleFactor)
-            translateY = scaleContainer.translationY
-        } else {
-            if (childLeftTop.y > 0) {
-                if (childLeftTop.y - Math.abs(translateY) >= 0) {
-                    scaleContainer.translationY += Math.abs(translateY)
-                    for (i in 0..scaleContainer.childCount - 1) {
-                        scaleContainer.getChildAt(i).translationY -= Math.abs(translateY / scaleFactor)
-                    }
-                    childLeftTop.offset(0f, translateY / scaleFactor)
-                    translateY = scaleContainer.translationY
-                } else {
-                    scaleContainer.translationY += Math.abs(childLeftTop.y)
-                    for (i in 0..scaleContainer.childCount - 1) {
-                        scaleContainer.getChildAt(i).translationY -= Math.abs(childLeftTop.y / scaleFactor)
-                    }
-                    childLeftTop.offset(0f, -childLeftTop.y / scaleFactor)
-                    translateY = scaleContainer.translationY
-                    scaleContainer.layoutParams.height = ((childHeight + Math.abs(translateY)) / scaleFactor).toInt()
-                }
-            } else {
-                scaleContainer.layoutParams.height = ((childHeight + Math.abs(translateY)) / scaleFactor).toInt()
+            if (baseShapeView.translationY < rectF.top) {
+                rectF.top = baseShapeView.translationY
+            }
+            val shapeRight = baseShapeView.translationX + baseShapeView.width
+            val shapeBottom = baseShapeView.translationY + baseShapeView.height
+            if (shapeRight > rectF.right) {
+                rectF.right = shapeRight
+            }
+            if (shapeBottom > rectF.bottom) {
+                rectF.bottom = shapeBottom
             }
         }
-        scaleContainer.rectFrame.offsetTo(childLeftTop.x, childLeftTop.y)
-        scaleContainer.requestLayout()
+        rectF.union(RectF(childLeftTop.x, childLeftTop.y, childLeftTop.x + childWidth, childLeftTop.y + childHeight))
+        container.layoutParams.width = rectF.width().toInt()
+        container.layoutParams.height = rectF.height().toInt()
+        if (rectF.left < 0) {
+            container.translationX -= Math.abs(rectF.left * scaleFactor)
+            childLeftTop.offset(Math.abs(rectF.left), 0f)
+            for (containerChildIndex in 0 until container.childCount) {
+                container.getChildAt(containerChildIndex).translationX += Math.abs(rectF.left)
+            }
+        } else {
+            container.translationX += Math.abs(rectF.left * scaleFactor)
+            childLeftTop.offset(-Math.abs(rectF.left), 0f)
+            for (containerChildIndex in 0 until container.childCount) {
+                container.getChildAt(containerChildIndex).translationX -= Math.abs(rectF.left)
+            }
+        }
+        if (rectF.top < 0) {
+            container.translationY -= Math.abs(rectF.top * scaleFactor)
+            childLeftTop.offset(0f, Math.abs(rectF.top))
+            for (containerChildIndex in 0 until container.childCount) {
+                container.getChildAt(containerChildIndex).translationY += Math.abs(rectF.top)
+            }
+        } else {
+            container.translationY += Math.abs(rectF.top * scaleFactor)
+            childLeftTop.offset(0f, -Math.abs(rectF.top))
+            for (containerChildIndex in 0 until container.childCount) {
+                container.getChildAt(containerChildIndex).translationY -= Math.abs(rectF.top)
+            }
+        }
+        translateX = container.translationX
+        translateY = container.translationY
+        child().rectFrame.offsetTo(childLeftTop.x, childLeftTop.y)
+        container.requestLayout()
     }
 
     override fun onTouchEvent(motionEvent: MotionEvent?): Boolean {

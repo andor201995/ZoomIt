@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
         val scaleContainer = ScaleContainer(this)
         val sqaureView1 = SqaureView(this)
         val editText = AppCompatEditText(this)
-        editText.setText("EditText try writing something and translating through it after zooming in/out")
+//        editText.setText("EditText try writing something and translating through it after zooming in/out")
         editText.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         editText.clearFocus()
         sqaureView1.addView(editText)
