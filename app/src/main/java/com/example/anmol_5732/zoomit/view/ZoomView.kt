@@ -205,12 +205,12 @@ class ZoomView(context: Context) : FrameLayout(context) {
     }
 
     private fun applyScaleAndTranslationToChild() {
-        child().setScaleX(scaleFactor)
-        child().setScaleY(scaleFactor)
-        child().setPivotX(0f)  // default is to pivot at view center
-        child().setPivotY(0f)  // default is to pivot at view center
-        child().setTranslationX(translateX)
-        child().setTranslationY(translateY)
+        child().scaleX = scaleFactor
+        child().scaleY = scaleFactor
+        child().pivotX = 0f  // default is to pivot at view center
+        child().pivotY = 0f  // default is to pivot at view center
+        child().translationX = translateX
+        child().translationY = translateY
     }
 
     private fun child(): ScaleContainer {
@@ -220,7 +220,7 @@ class ZoomView(context: Context) : FrameLayout(context) {
     inner class ScaleListner : ScaleGestureDetector.SimpleOnScaleGestureListener() {
 
         override fun onScale(scaleDetector: ScaleGestureDetector?): Boolean {
-            val scaleFactor = scaleDetector!!.getScaleFactor()
+            val scaleFactor = scaleDetector!!.scaleFactor
             setScaleAndTranslation(scaleFactor, scaleDetector.focusX, scaleDetector.focusY)
             return true
         }
