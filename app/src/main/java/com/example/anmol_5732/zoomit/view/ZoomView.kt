@@ -15,7 +15,10 @@ import android.widget.FrameLayout
  * Created by anmol-5732 on 20/02/18.
  */
 
-class ZoomView(context: Context) : FrameLayout(context) {
+class ZoomView(context: Context) : FrameLayout(context),ZoomViewListener {
+    override fun getCurrentScaleFactor(): Float {
+        return scaleFactor
+    }
 
     private var scaleFactor = 1f
     private var lastScaleFactor: Float = 0f

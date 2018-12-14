@@ -3,9 +3,9 @@ package com.example.anmol_5732.zoomit
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.AppCompatEditText
 import android.view.ViewGroup
 import android.widget.TextView
+import com.example.anmol_5732.zoomit.view.CustomEditText
 import com.example.anmol_5732.zoomit.view.ScaleContainer
 import com.example.anmol_5732.zoomit.view.SqaureView
 import com.example.anmol_5732.zoomit.view.ZoomView
@@ -24,10 +24,9 @@ class MainActivity : AppCompatActivity() {
         val zoomView = ZoomView(this)
         val scaleContainer = ScaleContainer(this)
         val sqaureView1 = SqaureView(this)
-        val editText = AppCompatEditText(this)
-//        editText.setText("EditText try writing something and translating through it after zooming in/out")
+        val editText = CustomEditText(this, null, 0, zoomView)
+        editText.setText("EditText try writing something and translating through it after zooming in/out")
         editText.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        editText.clearFocus()
         sqaureView1.addView(editText)
         sqaureView1.translationX = 400f
         sqaureView1.translationY = 400f
